@@ -10,6 +10,21 @@ class Runner
     @reports.each do |report|
       if report_safe?(report)
         @safe_count += 1
+        puts "#{report.inspect} safe"
+      else
+        found = false
+        report.size.times.with_index do |i|
+          if report_safe?(report.dup.tap{|a| a.delete_at(i)})
+            @safe_count += 1
+            puts "#{report.inspect} safe, removing #{report[i]} at position #{i}"
+            found = true
+            break
+          end
+        end
+
+        unless found
+          puts "#{report.inspect} unsafe"
+        end
       end
     end
 
@@ -25,33 +40,20 @@ class Runner
   end
 
   def report_safe?(report)
-    safe = false
-    output = report.map.with_index do |r, i|
-      if report[i+1]
-        r - report[i+1]
-      end
-    end.compact
+    safe = true
+    down = report[0] > report[-1]
 
-    pos_array = output.map(&:positive?)
-    pos_count = pos_array.count(true)
-    neg_count = pos_array.count(false)
-
-    if [0,1].include?(pos_count) || [0,1].include?(neg_count)
-      tally = output.tally
-      exceptions = tally.except(-3, -2, -1, 0, 1, 2, 3)
-      total_exceptions = exceptions.map {|k,v| v }.inject(&:+)
-
-      if total_exceptions.nil? || total_exceptions < 2
-        safe = true
-      end
+    unless down
+      report = report.reverse
     end
 
-    puts report.inspect
-    puts "pos count: #{pos_count.inspect}"
-    puts "neg count: #{neg_count.inspect}"
-
-    puts "output: #{output.inspect}"
-    puts safe
+    report.each.with_index do |floor, i|
+      if report[i+1]
+        unless [1,2,3].include?(floor - report[i+1])
+          safe = false
+        end
+      end
+    end
 
     safe
   end
@@ -62,5 +64,3 @@ TEST_OUTPUT = 4
 if Runner.new('test.txt').run == TEST_OUTPUT
   puts Runner.new('input.txt').run
 end
-
-# 394 too high
