@@ -10,14 +10,24 @@
       class Runner
         def initialize(filename)
           @input = File.read(filename)
+          @parsed_input = []
         end
 
         def run
+          parse_input
         end
 
         private
 
+        def parse_input
+          @input.each_line do |line|
+            @parsed_input << line # line parsing goes here
+          end
+        end
+
       end
+
+      TEST_OUTPUT = 'somevalue'
 
       if Runner.new('test.txt').run == TEST_OUTPUT
         puts Runner.new('input.txt').run
